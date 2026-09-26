@@ -82,6 +82,18 @@ const modules = [
     ),
   },
   {
+    title: "FullHead Creator · convierte tus partidas en ingresos",
+    desc: "Guía completa para monetizar tu contenido de Free Fire, paso a paso.",
+    route: "/creator",
+    accent: "#A855F7",
+    badge: { text: "EXCLUSIVO", bg: "rgba(168,85,247,0.12)", color: "#A855F7", border: "rgba(168,85,247,0.3)" },
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="#A855F7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M20.4 14.9c-.4-.9-.4-1.9 0-2.8l.9-1.9-1.9-1.9-1.9.9c-.9.4-1.9.4-2.8 0l-1.9-.9-1.9 1.9.9 1.9c.4.9.4 1.9 0 2.8l-.9 1.9 1.9 1.9 1.9-.9c.9-.4 1.9-.4 2.8 0l1.9.9 1.9-1.9z"/>
+      </svg>
+    ),
+  },
+  {
     title: "Firma PRO · genera tu nick con estilo",
     desc: "Crea tu firma estilo pro-player con símbolos y fuentes especiales.",
     route: "/nicks",
@@ -99,6 +111,7 @@ const MODULE_GROUPS = [
   { title: "Calibra tu celular", routes: ["/sensi", "/hud", "/configs", "/calibrador"] },
   { title: "Entrena y prepárate", routes: ["/treinos", "/conexion"] },
   { title: "Extras", routes: ["/nicks"], fullWidth: true },
+  { title: "FullHead Creator", routes: ["/creator"], fullWidth: true },
 ];
 
 function hexToRgba(hex, alpha) {

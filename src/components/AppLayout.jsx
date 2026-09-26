@@ -81,6 +81,14 @@ const nav = [
       </svg>
     )
   },
+  {
+    label: "FullHead Creator", to: "/creator", section: "FullHead Creator",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M20.4 14.9c-.4-.9-.4-1.9 0-2.8l.9-1.9-1.9-1.9-1.9.9c-.9.4-1.9.4-2.8 0l-1.9-.9-1.9 1.9.9 1.9c.4.9.4 1.9 0 2.8l-.9 1.9 1.9 1.9 1.9-.9c.9-.4 1.9-.4 2.8 0l1.9.9 1.9-1.9z"/>
+      </svg>
+    )
+  },
 ];
 
 export default function AppLayout({ children }) {
@@ -103,7 +111,7 @@ export default function AppLayout({ children }) {
 
   const userName = user?.displayName || user?.email?.split("@")[0] || "Usuario";
   const userInitial = userName.charAt(0).toUpperCase();
-  const isModuleRoute = ["/sensi", "/hud", "/configs", "/treinos", "/instalacion", "/calibrador", "/nicks", "/conexion"].includes(pathname);
+  const isModuleRoute = ["/sensi", "/hud", "/configs", "/treinos", "/instalacion", "/calibrador", "/nicks", "/conexion", "/creator", "/creator/oficial", "/creator/contenido", "/creator/monetizacion", "/creator/retos", "/creator/canal"].includes(pathname);
 
   if (isModuleRoute) {
     return <>{children}</>;

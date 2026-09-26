@@ -13,6 +13,12 @@ import Treinos from "./pages/Treinos.jsx";
 import CalibradorLive from "./pages/CalibradorLive.jsx";
 import GeneradorNicks from "./pages/GeneradorNicks.jsx";
 import CentroConexion from "./pages/CentroConexion.jsx";
+import CreatorHub from "./pages/CreatorHub.jsx";
+import Modulo1Oficial from "./pages/creator/Modulo1Oficial.jsx";
+import Modulo2Contenido from "./pages/creator/Modulo2Contenido.jsx";
+import Modulo3Monetizacion from "./pages/creator/Modulo3Monetizacion.jsx";
+import Modulo4Retos from "./pages/creator/Modulo4Retos.jsx";
+import Modulo5Canal from "./pages/creator/Modulo5Canal.jsx";
 import Instalacion from "./pages/Instalacion.jsx";
 import AppLayout from "./components/AppLayout.jsx";
 import { inicializarNotificaciones } from "./utils/notifications.js";
@@ -164,6 +170,12 @@ export default function App() {
           path="/conexion"
           element={<ProtectedRoute><CentroConexion /></ProtectedRoute>}
         />
+        <Route path="/creator" element={<ProtectedRoute><CreatorHub /></ProtectedRoute>} />
+        <Route path="/creator/oficial" element={<ProtectedRoute><Modulo1Oficial /></ProtectedRoute>} />
+        <Route path="/creator/contenido" element={<ProtectedRoute><Modulo2Contenido /></ProtectedRoute>} />
+        <Route path="/creator/monetizacion" element={<ProtectedRoute><Modulo3Monetizacion /></ProtectedRoute>} />
+        <Route path="/creator/retos" element={<ProtectedRoute><Modulo4Retos /></ProtectedRoute>} />
+        <Route path="/creator/canal" element={<ProtectedRoute><Modulo5Canal /></ProtectedRoute>} />
         <Route
           path="/"
           element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
