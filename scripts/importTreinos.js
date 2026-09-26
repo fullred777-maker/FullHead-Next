@@ -2,16 +2,7 @@ import fs from "fs";
 import path from "path";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: "panelfreefire-f90aa.firebaseapp.com",
-  projectId: "panelfreefire-f90aa",
-  storageBucket: "panelfreefire-f90aa.firebasestorage.app",
-  messagingSenderId: "788453326370",
-  appId: "1:788453326370:web:b53c27d2fe493e1e9c547b",
-  measurementId: "G-W8BTPFCFW4"
-};
+import { getTestFirebaseConfig } from "./firebaseConfig.js";
 
 function slug(s) {
   return String(s)
@@ -21,7 +12,7 @@ function slug(s) {
 }
 
 async function main() {
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp(getTestFirebaseConfig());
   const db = getFirestore(app);
 
   const raw = fs.readFileSync(path.resolve("treinos.json"), "utf-8");

@@ -55,8 +55,3 @@ outputType = "webview"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
-
-[userenv]
-
-[userenv.shared]
-VITE_FIREBASE_API_KEY = "AIzaSyA9eqc3PMW37oZi3RIjN_5DMrxfyeqeQgM"

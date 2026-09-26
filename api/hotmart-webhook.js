@@ -9,6 +9,13 @@
 // confirmar o payload real antes de subir pra produção.
 
 export default async function handler(req, res) {
+  if (
+    process.env.FULLHEAD_ENV !== 'production' ||
+    process.env.FULLHEAD_ENABLE_COMMERCE !== 'true'
+  ) {
+    return res.status(404).json({ error: 'Integração comercial desativada' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
