@@ -7,6 +7,7 @@ import { CatalogNotice, CopyFallback } from "../components/CatalogNotice.jsx";
 import { useClipboard } from "../hooks/useClipboard.js";
 import { SENSITIVITY_FIELDS } from "../domain/configContracts.js";
 import { buildSupportMailto } from "../utils/support.js";
+import ProfileActive from "../components/ProfileActive.jsx";
 
 // ── TOAST ──────────────────────────────────────────────
 function Toast({ visible }) {
@@ -315,6 +316,8 @@ export default function Sensi() {
       </div>
 
       <div style={{ padding: "20px 16px 80px", maxWidth: "1100px", margin: "0 auto" }}>
+
+        <ProfileActive />
 
         {/* Info banner */}
         <div style={{

@@ -23,6 +23,7 @@ import Instalacion from "./pages/Instalacion.jsx";
 import AppLayout from "./components/AppLayout.jsx";
 import { inicializarNotificaciones } from "./utils/notifications.js";
 import Tutorial from "./pages/Tutorial.jsx";
+import { PlayerProfileProvider } from "./context/PlayerProfileContext.jsx";
 
 // ─── Reset PWA via ?resetpwa na URL ──────────────────────
 if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("resetpwa")) {
@@ -96,7 +97,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) return <Navigate to="/registro" />;
-  return <AppLayout>{children}</AppLayout>;
+  return <PlayerProfileProvider key={user.uid} userId={user.uid}><AppLayout>{children}</AppLayout></PlayerProfileProvider>;
 }
 
 // ─── Controlador de fluxo ─────────────────────────────────

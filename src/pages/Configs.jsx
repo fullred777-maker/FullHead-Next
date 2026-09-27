@@ -7,6 +7,7 @@ import { CatalogNotice, CopyFallback } from "../components/CatalogNotice.jsx";
 import { useClipboard } from "../hooks/useClipboard.js";
 import { availabilityLabel } from "../domain/configContracts.js";
 import { buildSupportMailto } from "../utils/support.js";
+import ProfileActive from "../components/ProfileActive.jsx";
 
 // ── TOAST ──────────────────────────────────────────────
 function Toast({ visible }) {
@@ -320,6 +321,8 @@ export default function Configs() {
       </div>
 
       <div style={{ padding: "20px 16px 80px" }}>
+
+        <ProfileActive />
 
         {/* Info banner */}
         <div style={{
