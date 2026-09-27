@@ -12,7 +12,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "audit:core": "node scripts/auditCoreConfig.js",
+    "test:m1": "node --test tests/*.test.js"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db, auth, messaging } from "../firebase";
+import { readLegacyCatalog, distinctDeviceCount } from "../domain/legacyCatalog.js";
 import { inicializarNotificaciones } from "../utils/notifications.js";
 
 const UPDATE_NOTICE_KEY = "fh_update_seen_v4_conexion";
@@ -9,7 +10,7 @@ const UPDATE_NOTICE_KEY = "fh_update_seen_v4_conexion";
 const modules = [
   {
     title: "Sensibilidad por Celular",
-    desc: "Presets PRO por modelo de dispositivo.",
+    desc: "Bases recomendadas por modelo, sin validación registrada.",
     route: "/sensi",
     accent: "#3B82F6",
     badge: { text: "PRO", bg: "rgba(212,170,0,0.1)", color: "#D4AA00", border: "rgba(212,170,0,0.2)" },
@@ -23,7 +24,7 @@ const modules = [
   },
   {
     title: "HUD Pro",
-    desc: "Interfaces recomendadas para mejor visibilidad.",
+    desc: "Guía textual de HUD; aplicación manual.",
     route: "/hud",
     accent: "#F97316",
     badge: { text: "PRO", bg: "rgba(212,170,0,0.1)", color: "#D4AA00", border: "rgba(212,170,0,0.2)" },
@@ -35,7 +36,7 @@ const modules = [
   },
   {
     title: "Configuraciones Pro",
-    desc: "Ajustes avanzados para optimizar tu juego.",
+    desc: "Opciones de gráficos y FPS por confirmar en el juego.",
     route: "/configs",
     accent: "#06B6D4",
     badge: { text: "PRO", bg: "rgba(212,170,0,0.1)", color: "#D4AA00", border: "rgba(212,170,0,0.2)" },
@@ -59,7 +60,7 @@ const modules = [
   },
   {
     title: "Calibrador en Vivo",
-    desc: "Ajusta, prueba y guarda tu sensibilidad personalizada.",
+    desc: "Complemento para crear y guardar un ajuste personalizable.",
     route: "/calibrador",
     accent: "#D4AA00",
     badge: null,
@@ -203,7 +204,7 @@ export default function Dashboard() {
   useEffect(() => {
     setShowUpdate(!localStorage.getItem(UPDATE_NOTICE_KEY));
     getDocs(collection(db, "presets"))
-      .then((snap) => setDeviceCount(snap.size))
+      .then((snap) => setDeviceCount(distinctDeviceCount(readLegacyCatalog("presets", snap.docs.map(d => ({ ...d.data(), id: d.id })), { transport: true }))))
       .catch(() => setDeviceCount(null));
     if (typeof Notification !== "undefined") {
       setNotifStatus(Notification.permission);
@@ -369,7 +370,7 @@ export default function Dashboard() {
             SISTEMA <span style={{ color: "#D4AA00" }}>FULLHEAD</span>
           </div>
           <div style={{ fontSize: "12px", color: "#4A5578", marginBottom: "14px" }}>
-            Selecciona un módulo para optimizar tu rendimiento al máximo
+            Explora tus bases de sensibilidad, guías de HUD y opciones de Config Pro
           </div>
 
           {/* Stats */}
@@ -442,7 +443,7 @@ export default function Dashboard() {
           <div style={{ width: "2px", height: "26px", background: "#D4AA00", opacity: 0.25, borderRadius: "2px", flexShrink: 0 }} />
           <div style={{ fontSize: "11px", color: "#4A5578", lineHeight: 1.5 }}>
             <strong style={{ color: "#6A78A8", fontWeight: 600 }}>Consejo Pro:</strong>{" "}
-            Todos los ajustes se sincronizan automáticamente en tu cuenta. Accede desde cualquier dispositivo.
+            El Calibrador permite guardar ajustes personales en tu cuenta. Copiar una base no aplica ni guarda cambios en Free Fire.
           </div>
         </div>
       </div>

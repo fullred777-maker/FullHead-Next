@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
+import { readLegacyCatalog } from "../domain/legacyCatalog.js";
+import { CatalogNotice, CopyFallback } from "../components/CatalogNotice.jsx";
+import { useClipboard } from "../hooks/useClipboard.js";
+import { fingerCount } from "../domain/configContracts.js";
 import { buildSupportMailto } from "../utils/support.js";
 
 // ── TOAST ──────────────────────────────────────────────
@@ -27,14 +31,15 @@ function Toast({ visible }) {
       pointerEvents: "none",
       whiteSpace: "nowrap",
     }}>
-      ✓ HUD COPIADO
+      ✓ GUÍA COPIADA
     </div>
   );
 }
 
 // ── BADGE DE DEDOS ─────────────────────────────────────
-function FingersBadge({ fingers }) {
-  const is3 = fingers?.includes("3");
+export function FingersBadge({ fingers }) {
+  const count = fingerCount(fingers);
+  const is3 = count === 3;
   return (
     <span style={{
       display: "inline-flex",
@@ -50,40 +55,16 @@ function FingersBadge({ fingers }) {
       borderRadius: "3px",
       textTransform: "uppercase",
     }}>
-      {is3 ? "✦ 3 DEDOS" : "● 2 DEDOS"}
+      {count === null ? "DEDOS DESCONOCIDOS" : count + " DEDOS"}
     </span>
   );
 }
 
 // ── BADGE DE GAMA ──────────────────────────────────────
-function GamaBadge({ notes }) {
-  const n = notes?.toLowerCase() || "";
-  let label, color;
-  if (n.includes("120hz") || n.includes("promot")) { label = "120Hz · PRO"; color = "var(--gold)"; }
-  else if (n.includes("90hz")) { label = "90Hz · MED"; color = "#1A6FA8"; }
-  else { label = "60Hz · BASE"; color = "var(--text-muted)"; }
-
-  return (
-    <span style={{
-      display: "inline-block",
-      background: "rgba(255,255,255,0.04)",
-      border: `1px solid ${color}44`,
-      color,
-      fontSize: "9px",
-      fontWeight: 700,
-      letterSpacing: "1.5px",
-      padding: "2px 8px",
-      borderRadius: "3px",
-      textTransform: "uppercase",
-    }}>
-      {label}
-    </span>
-  );
-}
 
 // ── STEP ITEM ──────────────────────────────────────────
 function StepItem({ text }) {
-  const clean = text.replace(/^[•\-]\s*/, "").trim();
+  const clean = text.replace(/^[•-]\s*/, "").trim();
   if (!clean) return null;
 
   const isDica = clean.toLowerCase().startsWith("dica");
@@ -139,7 +120,7 @@ function StepItem({ text }) {
 }
 
 // ── CARD DE HUD ────────────────────────────────────────
-function HudCard({ h, onCopy }) {
+export function HudCard({ h, onCopy }) {
   const [expanded, setExpanded] = useState(false);
   const steps = h.steps?.split("\n").filter(Boolean) || [];
 
@@ -166,7 +147,7 @@ function HudCard({ h, onCopy }) {
           </div>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
             <FingersBadge fingers={h.fingers} />
-            <GamaBadge notes={h.notes} />
+
           </div>
         </div>
 
@@ -186,6 +167,8 @@ function HudCard({ h, onCopy }) {
         </div>
       </div>
 
+      <CatalogNotice record={h} />
+      <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "10px" }}>Archivo original sin revisar. Las instrucciones siguientes no acreditan pruebas en tu dispositivo.</div>
       {/* Descrição */}
       <div style={{
         fontSize: "12px",
@@ -202,7 +185,7 @@ function HudCard({ h, onCopy }) {
 
       {/* Steps label */}
       <div className="section-header-fh" style={{ marginBottom: "10px" }}>
-        <span className="section-label-fh">Configuración del HUD</span>
+        <span className="section-label-fh">Guía textual de HUD</span>
         <div className="section-line-fh" />
       </div>
 
@@ -213,7 +196,7 @@ function HudCard({ h, onCopy }) {
         ))}
       </div>
 
-      {/* Ver mais */}
+      {/* Ver más */}
       {steps.length > 4 && (
         <button
           onClick={() => setExpanded(!expanded)}
@@ -234,7 +217,7 @@ function HudCard({ h, onCopy }) {
           onMouseEnter={e => { e.target.style.borderColor = "var(--border-gold)"; e.target.style.color = "var(--gold)"; }}
           onMouseLeave={e => { e.target.style.borderColor = "var(--border)"; e.target.style.color = "var(--text-muted)"; }}
         >
-          {expanded ? "▲ Ver menos" : `▼ Ver mais ${steps.length - 4} itens`}
+          {expanded ? "▲ Ver menos" : `▼ Ver más ${steps.length - 4} pasos`}
         </button>
       )}
 
@@ -259,13 +242,15 @@ function HudCard({ h, onCopy }) {
       <button
         className="btn-copy"
         style={{ width: "100%", justifyContent: "center", gap: "8px" }}
+        disabled={h.integrity.conflicts.length > 0}
+        title={h.integrity.conflicts.length ? "Copia suspendida hasta resolver las instrucciones contradictorias" : "Copiar instrucciones como texto"}
         onClick={() => onCopy(h)}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
         </svg>
-        COPIAR HUD
+        COPIAR GUÍA
       </button>
     </div>
   );
@@ -280,7 +265,7 @@ export default function Hud() {
   const [brand, setBrand] = useState("Todos");
   const [search, setSearch] = useState("");
   const [fingers, setFingers] = useState("Todos");
-  const [toast, setToast] = useState(false);
+  const { toast, manualText, copy, closeManual } = useClipboard();
 
   const brands = useMemo(() => {
     const set = new Set(items.map((i) => i.brand));
@@ -291,7 +276,7 @@ export default function Hud() {
     const s = search.trim().toLowerCase();
     return items
       .filter((i) => brand === "Todos" ? true : i.brand === brand)
-      .filter((i) => fingers === "Todos" ? true : i.fingers?.includes(fingers === "2" ? "2" : "3"))
+      .filter((i) => fingers === "Todos" ? true : fingerCount(i.fingers) === Number(fingers))
       .filter((i) => {
         if (!s) return true;
         const haystack = `${i.brand} ${i.model}`.toLowerCase();
@@ -306,7 +291,7 @@ export default function Hud() {
       setError("");
       try {
         const snap = await getDocs(collection(db, "huds"));
-        setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setItems(readLegacyCatalog("huds", snap.docs.map((d) => ({ ...d.data(), id: d.id })), { transport: true }));
       } catch (e) {
         console.error(e);
         setError("Error al cargar los HUDs.");
@@ -318,21 +303,21 @@ export default function Hud() {
   }, []);
 
   const handleCopy = useCallback((h) => {
+    if (h.integrity.conflicts.length) return;
     const text =
       `🎮 HUD ${h.brand} ${h.model} (${h.fingers})\n` +
       `━━━━━━━━━━━━━━━━\n` +
       h.steps + "\n" +
       `━━━━━━━━━━━━━━━━\n` +
       (h.notes ? `✓ ${h.notes}\n` : "") +
-      `Panel FullHead ⚡`;
-    navigator.clipboard.writeText(text);
-    setToast(true);
-    setTimeout(() => setToast(false), 2000);
-  }, []);
+      `Base sin validación registrada. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
+    void copy(text);
+  }, [copy]);
 
   return (
     <div className="module-page">
       <Toast visible={toast} />
+      <CopyFallback text={manualText} onClose={closeManual} />
 
       {/* Header */}
       <div className="module-header">
@@ -342,8 +327,8 @@ export default function Hud() {
           </svg>
         </button>
         <div>
-          <div className="module-title">HUD Pro</div>
-          <div className="module-subtitle">Interfaces recomendadas por modelo</div>
+          <div className="module-title">Guía textual de HUD</div>
+          <div className="module-subtitle">Instrucciones de referencia · Aplicación manual</div>
         </div>
       </div>
 
@@ -360,8 +345,8 @@ export default function Hud() {
           color: "var(--text-muted)",
           lineHeight: 1.6,
         }}>
-          <span style={{ color: "var(--gold)", fontWeight: 700 }}>🎮 HUD Pro:</span>{" "}
-          Posicionamento e tamanho de botões recomendados para cada celular. Copia, aplica no Free Fire e ajusta ±2% conforme seu polegar.
+          <span style={{ color: "var(--gold)", fontWeight: 700 }}>🎮 Guía textual:</span>{" "}
+          Esta base incluye instrucciones, sin imagen, código ni coordenadas reproducibles. Copiar texto no importa un HUD. Revisa alcance y comodidad antes de aplicar cambios.
         </div>
 
         {/* Filtros */}
@@ -385,7 +370,7 @@ export default function Hud() {
 
         {/* Toggle dedos */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "16px", alignItems: "center", flexWrap: "wrap" }}>
-          {["Todos", "2", "3"].map((f) => (
+          {["Todos", ...Array.from(new Set(items.map(i => String(fingerCount(i.fingers))))).sort()].map((f) => (
             <button
               key={f}
               onClick={() => setFingers(f)}
@@ -478,7 +463,7 @@ export default function Hud() {
             lineHeight: 1.7,
           }}>
             <span style={{ color: "var(--gold)", fontWeight: 700 }}>💡 Pro tip:</span>{" "}
-            Aplica el HUD en Free Fire → Configuración → HUD. Juega 5 partidas antes de cambiar algo — el cuerpo necesita tiempo para adaptarse. Ajusta de a 2% por vez.
+            Conserva una referencia de tu HUD actual. Comprueba alcance y comodidad en el juego; modifica un control a la vez. No apliques los consejos pendientes de revisión.
           </div>
         )}
       </div>

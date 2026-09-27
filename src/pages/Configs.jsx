@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
+import { readLegacyCatalog } from "../domain/legacyCatalog.js";
+import { CatalogNotice, CopyFallback } from "../components/CatalogNotice.jsx";
+import { useClipboard } from "../hooks/useClipboard.js";
+import { availabilityLabel } from "../domain/configContracts.js";
 import { buildSupportMailto } from "../utils/support.js";
 
 // ── TOAST ──────────────────────────────────────────────
@@ -33,32 +37,6 @@ function Toast({ visible }) {
 }
 
 // ── BADGE DE GAMA ──────────────────────────────────────
-function GamaBadge({ notes }) {
-  const n = notes?.toLowerCase() || "";
-  let label, color;
-  if (n.includes("120hz")) { label = "120Hz · PRO"; color = "var(--gold)"; }
-  else if (n.includes("90hz")) { label = "90Hz · MED"; color = "#1A6FA8"; }
-  else if (n.includes("144hz")) { label = "144Hz · ELITE"; color = "#C0392B"; }
-  else if (n.includes("ios")) { label = "iOS"; color = "#888"; }
-  else { label = "60Hz · BASE"; color = "var(--text-muted)"; }
-
-  return (
-    <span style={{
-      display: "inline-block",
-      background: "rgba(255,255,255,0.04)",
-      border: `1px solid ${color}44`,
-      color,
-      fontSize: "9px",
-      fontWeight: 700,
-      letterSpacing: "1.5px",
-      padding: "2px 8px",
-      borderRadius: "3px",
-      textTransform: "uppercase",
-    }}>
-      {label}
-    </span>
-  );
-}
 
 // ── CONFIG ROW ─────────────────────────────────────────
 function ConfigRow({ icon, label, value, highlight }) {
@@ -91,7 +69,7 @@ function ConfigRow({ icon, label, value, highlight }) {
 
 // ── TIP ITEM ───────────────────────────────────────────
 function TipItem({ text }) {
-  const clean = text.replace(/^[•\-]\s*/, "").trim();
+  const clean = text.replace(/^[•-]\s*/, "").trim();
   if (!clean) return null;
   return (
     <div style={{
@@ -109,8 +87,9 @@ function TipItem({ text }) {
 }
 
 // ── CARD DE CONFIG ─────────────────────────────────────
-function ConfigCard({ c, onCopy }) {
+export function ConfigCard({ c, onCopy }) {
   const [expanded, setExpanded] = useState(false);
+  const [availability, setAvailability] = useState(c.integrity.availability);
   const tips = c.tips?.split("\n").filter(Boolean) || [];
 
   return (
@@ -135,27 +114,36 @@ function ConfigCard({ c, onCopy }) {
             {c.brand} {c.model}
           </div>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
-            <GamaBadge notes={c.notes} />
+
           </div>
         </div>
         <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <div style={{ fontSize: "9px", color: "var(--text-muted)", letterSpacing: "1px", textTransform: "uppercase" }}>DPI</div>
+          <div style={{ fontSize: "9px", color: "var(--text-muted)", letterSpacing: "1px", textTransform: "uppercase" }}>DPI legado · no requerido</div>
           <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: "18px", fontWeight: 700, color: "var(--text)" }}>
-            {c.dpi > 0 ? c.dpi : "iOS"}
+            {c.integrity.dpi.status === "not_applicable" ? "No aplica" : c.dpi}
           </div>
         </div>
       </div>
 
+      <CatalogNotice record={c} />
+      <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>Confirma si cada opción aparece en tu juego. Esta comprobación es temporal y no valida su rendimiento. Si no aparece, conserva tu ajuste actual.</p>
       {/* Seção: Gráficos */}
       <div className="section-header-fh" style={{ marginBottom: "8px" }}>
         <span className="section-label-fh">Gráficos & FPS</span>
         <div className="section-line-fh" />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "14px" }}>
-        <ConfigRow icon="🎨" label="Gráficos" value={c.graphics} />
-        <ConfigRow icon="⚡" label="FPS Alto" value={c.highFps} highlight />
-        <ConfigRow icon="🌑" label="Sombras" value={c.shadow} />
-        <ConfigRow icon="🎭" label="Filtro" value={c.filters} />
+        {[["graphics", "Gráficos", "🎨"], ["highFps", "FPS Alto", "⚡"], ["shadow", "Sombras", "🌑"], ["filters", "Filtro", "🎭"]].map(([key, label, icon]) => (
+          <div key={key}>
+            <ConfigRow icon={icon} label={label} value={availability[key] === "unavailable" ? "No disponible: conserva tu ajuste" : c[key]} />
+            <label style={{ display: "block", fontSize: "11px", color: "var(--text-muted)", margin: "6px 0 10px" }}>
+              ¿La opción {label} aparece en tu juego?
+              <select aria-label={`Disponibilidad de ${label}`} value={availability[key]} onChange={event => setAvailability(current => ({ ...current, [key]: event.target.value }))} className="fh-select" style={{ width: "100%", marginTop: "4px" }}>
+                {["unconfirmed", "available", "unavailable"].map(status => <option key={status} value={status}>{availabilityLabel(status)}</option>)}
+              </select>
+            </label>
+          </div>
+        ))}
       </div>
 
       {/* Seção: Botões */}
@@ -164,15 +152,16 @@ function ConfigCard({ c, onCopy }) {
         <div className="section-line-fh" />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "14px" }}>
-        <ConfigRow icon="🎯" label="Botón disparo" value={c.fireButton} highlight />
-        <ConfigRow icon="👁️" label="Botón puntería" value={c.aimButton} />
+        <ConfigRow icon="🎯" label="Botones" value={c.integrity.conflicts.length ? "Revisión pendiente en HUD" : "Consulta la guía de HUD; es la fuente de tamaños"} />
+        <details><summary>Ver tamaños legados (archivo, no recomendación)</summary><p>Disparo: {c.fireButton} · Puntería: {c.aimButton}. No aplicar desde Config Pro.</p></details>
       </div>
 
       {/* Tips */}
       {tips.length > 0 && (
+        <details><summary>Archivo original de consejos · Sin revisar</summary>
         <>
           <div className="section-header-fh" style={{ marginBottom: "8px" }}>
-            <span className="section-label-fh">Consejos Pro</span>
+            <span className="section-label-fh">Consejos legados · No son instrucciones finales</span>
             <div className="section-line-fh" />
           </div>
           <div style={{
@@ -209,6 +198,7 @@ function ConfigCard({ c, onCopy }) {
             )}
           </div>
         </>
+        </details>
       )}
 
       {/* Nota */}
@@ -227,7 +217,7 @@ function ConfigCard({ c, onCopy }) {
           lineHeight: 1.5,
         }}>
           <span style={{ flexShrink: 0 }}>✓</span>
-          <span>{c.notes}</span>
+          <span>Nota original sin verificar: {c.notes}</span>
         </div>
       )}
 
@@ -235,7 +225,9 @@ function ConfigCard({ c, onCopy }) {
       <button
         className="btn-copy"
         style={{ width: "100%", justifyContent: "center", gap: "8px" }}
-        onClick={() => onCopy(c)}
+        disabled={c.integrity.conflicts.length > 0}
+        title={c.integrity.conflicts.length ? "Copia suspendida hasta la revisión" : "Copiar opciones pendientes de confirmar"}
+        onClick={() => onCopy(c, availability)}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -255,7 +247,7 @@ export default function Configs() {
   const [error, setError] = useState("");
   const [brand, setBrand] = useState("Todos");
   const [search, setSearch] = useState("");
-  const [toast, setToast] = useState(false);
+  const { toast, manualText, copy, closeManual } = useClipboard();
 
   const brands = useMemo(() => {
     const set = new Set(items.map((i) => i.brand));
@@ -280,7 +272,7 @@ export default function Configs() {
       setError("");
       try {
         const snap = await getDocs(collection(db, "configs"));
-        setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+        setItems(readLegacyCatalog("configs", snap.docs.map((d) => ({ ...d.data(), id: d.id })), { transport: true }));
       } catch (e) {
         console.error(e);
         setError("Error al cargar las configuraciones.");
@@ -291,28 +283,28 @@ export default function Configs() {
     fetchAll();
   }, []);
 
-  const handleCopy = useCallback((c) => {
+  const handleCopy = useCallback((c, availability = c.integrity.availability) => {
+    if (c.integrity.conflicts.length) return;
+    const optionText = key => availability[key] === "unavailable" ? "No disponible; conserva tu ajuste" : `${c[key]} (${availabilityLabel(availability[key])}; valor sin validar)`;
     const text =
       `⚙️ Config Pro — ${c.brand} ${c.model}\n` +
       `━━━━━━━━━━━━━━━━\n` +
-      `DPI:            ${c.dpi > 0 ? c.dpi : "iOS"}\n` +
-      `Gráficos:       ${c.graphics}\n` +
-      `FPS Alto:       ${c.highFps}\n` +
-      `Sombras:        ${c.shadow}\n` +
-      `Filtro:         ${c.filters}\n` +
-      `Btn Disparo:    ${c.fireButton}\n` +
-      `Btn Puntería:   ${c.aimButton}\n` +
+      `Escala del sistema: conservar la actual; DPI no requerido.\n` +
+      `Gráficos:       ${optionText("graphics")}\n` +
+      `FPS Alto:       ${optionText("highFps")}\n` +
+      `Sombras:        ${optionText("shadow")}\n` +
+      `Filtro:         ${optionText("filters")}\n` +
+      `Botones: consulta la guía textual de HUD.\n` +
       `━━━━━━━━━━━━━━━━\n` +
-      (c.tips ? `Consejos:\n${c.tips}\n` : "") +
-      `Panel FullHead ⚡`;
-    navigator.clipboard.writeText(text);
-    setToast(true);
-    setTimeout(() => setToast(false), 2000);
-  }, []);
+      `Opciones sin confirmar en tu versión. Si no están disponibles, conserva tu ajuste actual.\n` +
+      `Base sin validación registrada. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
+    void copy(text);
+  }, [copy]);
 
   return (
     <div className="module-page">
       <Toast visible={toast} />
+      <CopyFallback text={manualText} onClose={closeManual} />
 
       {/* Header */}
       <div className="module-header">
@@ -323,7 +315,7 @@ export default function Configs() {
         </button>
         <div>
           <div className="module-title">Configuraciones Pro</div>
-          <div className="module-subtitle">Ajustes optimizados para tu dispositivo</div>
+          <div className="module-subtitle">Base recomendada · Opciones por confirmar</div>
         </div>
       </div>
 
@@ -341,7 +333,7 @@ export default function Configs() {
           lineHeight: 1.6,
         }}>
           <span style={{ color: "var(--gold)", fontWeight: 700 }}>⚙️ Config Pro:</span>{" "}
-          Gráficos, FPS y botones calibrados para tu celular. Aplica todo junto con tu sensibilidad FullHead para el máximo rendimiento.
+          Base recomendada para revisar opciones de gráficos. Confirma su disponibilidad en el juego y prueba un cambio a la vez. No se garantiza un nivel de FPS.
         </div>
 
         {/* Config Pro para HS */}
@@ -355,8 +347,8 @@ export default function Configs() {
           color: "var(--text-muted)",
           lineHeight: 1.6,
         }}>
-          <span style={{ color: "#E57373", fontWeight: 700 }}>🎯 Configuraciones Pro para HS:</span>{" "}
-          El tamaño y posición del botón de disparo abajo, combinados con tu Mira 2x/4x en la Sensibilidad, son lo que más impacta tus headshots. Ajusta ambos juntos, no solo uno.
+          <span style={{ color: "#E57373", fontWeight: 700 }}>🎯 Sensibilidad y HUD:</span>{" "}
+          Consulta los tamaños de botones en la guía de HUD. Conserva la sensibilidad mientras pruebas un cambio de botón para distinguir sus efectos. No hay resultados garantizados.
         </div>
 
         {/* Filtros */}
@@ -452,7 +444,7 @@ export default function Configs() {
             lineHeight: 1.7,
           }}>
             <span style={{ color: "var(--gold)", fontWeight: 700 }}>💡 Pro tip:</span>{" "}
-            Aplica primero la sensibilidad del módulo Sensi, luego estas configuraciones de gráficos y botones. Cierra todas las apps antes de jugar y activa el modo rendimiento de tu celular si está disponible.
+            Revisa qué opciones existen en tu versión de Free Fire. Conserva tus valores anteriores y prueba un cambio a la vez; no es necesario modificar ajustes avanzados de Android.
           </div>
         )}
       </div>

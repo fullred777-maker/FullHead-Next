@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
+import { readLegacyCatalog } from "../domain/legacyCatalog.js";
+import { useClipboard } from "../hooks/useClipboard.js";
+import { CopyFallback } from "../components/CatalogNotice.jsx";
 import RadarSonoroTrainer from "../components/RadarSonoroTrainer.jsx";
 
 const STYLES = `
@@ -216,7 +219,7 @@ function TreinoCard({ t, idx, onCopy }) {
         {/* Steps */}
         <div style={{ display:"flex",flexDirection:"column",gap:"5px",marginBottom:"10px" }}>
           {(expanded ? steps : steps.slice(0,3)).map((s,i)=>{
-            const clean = s.replace(/^[•\-]\s*/,"").trim();
+            const clean = s.replace(/^[•-]\s*/,"").trim();
             if(!clean) return null;
             return (
               <div key={i} style={{ display:"flex",gap:"9px",alignItems:"flex-start",padding:"7px 10px",background:i%2===0?"var(--surface2)":"rgba(255,255,255,0.02)",border:`1px solid ${i===0?cat.color+"22":"var(--border)"}`,borderRadius:"8px" }}>
@@ -270,7 +273,7 @@ export default function Treinos() {
     return params.get("cat") || "Todos";
   });
   const [level, setLevel] = useState("Todos");
-  const [toast, setToast] = useState(false);
+  const { toast, manualText, copy, closeManual } = useClipboard();
 
   const filtered = useMemo(() => items
     .filter(i => category==="Todos" || i.category===category)
@@ -282,23 +285,23 @@ export default function Treinos() {
       setLoading(true);
       try {
         const snap = await getDocs(collection(db,"treinos"));
-        setItems(snap.docs.map(d=>({id:d.id,...d.data()})));
-      } catch(e) { setError("Error al cargar."); }
+        setItems(readLegacyCatalog("treinos", snap.docs.map(d=>({...d.data(),id:d.id})), { transport: true }));
+      } catch { setError("Error al cargar."); }
       finally { setLoading(false); }
     }
     fetchAll();
   },[]);
 
   const handleCopy = useCallback((t)=>{
-    navigator.clipboard.writeText(`⚡ ${t.title}\n━━━━━━━━━━━━━━━━\nCategoría: ${t.category}\nNivel: ${t.level}\nDuración: ${t.duration}\nFrecuencia: ${t.frequency}\n━━━━━━━━━━━━━━━━\n${t.steps}${t.notes?`\n\n💡 ${t.notes}`:""}\nPanel FullHead ⚡`);
-    setToast(true);
-    setTimeout(()=>setToast(false),2000);
-  },[]);
+    void copy(`Rutina de referencia sin validación registrada.\n⚡ ${t.title}\n━━━━━━━━━━━━━━━━\nCategoría: ${t.category}\nNivel: ${t.level}\nDuración: ${t.duration}\nFrecuencia: ${t.frequency}\n━━━━━━━━━━━━━━━━\n${t.steps}${t.notes?`\n\n💡 ${t.notes}`:""}\nPanel FullHead ⚡`);
+
+  },[copy]);
 
   return (
     <div className="module-page">
       <style>{STYLES}</style>
       <Toast visible={toast}/>
+      <CopyFallback text={manualText} onClose={closeManual} />
 
       <div className="module-header">
         <button className="module-back-btn" onClick={()=>navigate("/")} title="Volver">
@@ -317,7 +320,7 @@ export default function Treinos() {
           <span style={{ fontSize:"24px",flexShrink:0 }}>⚡</span>
           <div>
             <div style={{ fontSize:"11px",fontWeight:800,color:"var(--gold)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:"2px" }}>Método FullHead</div>
-            <div style={{ fontSize:"11px",color:"var(--text-muted)",lineHeight:1.5 }}>15 min de práctica diaria = semanas de mejora. Usa el timer para cronometrar.</div>
+            <div style={{ fontSize:"11px",color:"var(--text-muted)",lineHeight:1.5 }}>Rutinas de referencia sin resultados validados. El tiempo no acredita mejora ni práctica completada; el timer puede pausarse al salir al juego.</div>
           </div>
         </div>
 

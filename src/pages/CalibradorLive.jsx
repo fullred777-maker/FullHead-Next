@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, getDocs, addDoc, deleteDoc, doc, query, where, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../firebase";
+import { readLegacyCatalog } from "../domain/legacyCatalog.js";
+import { SENSITIVITY_FIELDS, sensitivitySnapshot, changeSensitivity, saveSensitivitySnapshot } from "../domain/configContracts.js";
 
 // ── ESTILOS GLOBAIS ────────────────────────────────────
 const STYLES = `
@@ -30,45 +32,20 @@ const STYLES = `
   @keyframes scan-pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
 `;
 
-const SLIDER_FIELDS = [
-  { key: "general", label: "General",      max: 200, color: "#D4A017" },
-  { key: "redDot",  label: "Red Dot",      max: 200, color: "#C0392B" },
-  { key: "x2",      label: "Mira 2x",      max: 200, color: "#1A6FA8" },
-  { key: "x4",      label: "Mira 4x",      max: 200, color: "#1E8C4A" },
-  { key: "awm",     label: "AWM",          max: 200, color: "#8E44AD" },
-  { key: "freeLook",label: "Mirada Libre", max: 40,  color: "#E67E22" },
-];
+const SLIDER_FIELDS = SENSITIVITY_FIELDS;
 
-const DEFAULT_VALUES = { general: 100, redDot: 90, x2: 80, x4: 70, awm: 60, freeLook: 15 };
-const COMMON_HZ = [60, 90, 120, 144, 165, 240];
-
-function snapToCommonHz(measured) {
-  return COMMON_HZ.reduce((closest, hz) =>
-    Math.abs(hz - measured) < Math.abs(closest - measured) ? hz : closest
-  , COMMON_HZ[0]);
-}
-
-// Mide la tasa de refresco REAL de la pantalla contando cuadros dibujados
-// por el propio navegador durante ~1.2s — no es un valor inventado.
+// Browser rendering estimate only; never identifies device hardware or game FPS.
 function measureRefreshRate(onDone) {
   let frames = 0;
   const start = performance.now();
   function tick() {
+    if (document.visibilityState === "hidden") { onDone(null); return; }
     frames++;
     const elapsed = performance.now() - start;
-    if (elapsed < 1200) {
-      requestAnimationFrame(tick);
-    } else {
-      const fps = (frames / elapsed) * 1000;
-      onDone(snapToCommonHz(fps), Math.round(fps));
-    }
+    if (elapsed < 1200) requestAnimationFrame(tick);
+    else onDone(Math.round(frames / elapsed * 1000));
   }
   requestAnimationFrame(tick);
-}
-
-function extractHz(notes) {
-  const m = /(\d+)\s*Hz/i.exec(notes || "");
-  return m ? Number(m[1]) : null;
 }
 
 function SectionBlock({ title, icon, color, borderColor, bgColor, children, delay = "0s" }) {
@@ -117,8 +94,8 @@ function SectionBlock({ title, icon, color, borderColor, bgColor, children, dela
   );
 }
 
-function LiveSlider({ field, value, onChange }) {
-  const pct = Math.min((value / field.max) * 100, 100);
+export function LiveSlider({ field, value, onChange }) {
+  const pct = value == null ? 0 : Math.min((value / field.max) * 100, 100);
   return (
     <div className="cl-row" style={{ marginBottom: "16px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
@@ -129,7 +106,7 @@ function LiveSlider({ field, value, onChange }) {
         <span style={{
           fontFamily: "'Share Tech Mono', monospace", fontSize: "13px", fontWeight: 700,
           color: field.color,
-        }}>{value}</span>
+        }}>{value ?? "Sin base"}</span>
       </div>
       <div style={{ position: "relative", height: "22px", display: "flex", alignItems: "center" }}>
         <div style={{ position: "absolute", left: 0, right: 0, height: "3px", background: "rgba(255,255,255,0.06)", borderRadius: "2px" }}/>
@@ -139,7 +116,9 @@ function LiveSlider({ field, value, onChange }) {
           borderRadius: "2px", boxShadow: `0 0 8px ${field.color}66`, transition: "width 0.1s",
         }}/>
         <input
-          type="range" min="0" max={field.max} value={value}
+          aria-label={field.label}
+          disabled={!field.editable || value == null}
+          type="range" min={field.min} max={field.max} step={field.step} value={value ?? field.min}
           onChange={(e) => onChange(field.key, Number(e.target.value))}
           style={{ position: "absolute", left: 0, right: 0, width: "100%", height: "22px", opacity: 0, cursor: "pointer", margin: 0 }}
         />
@@ -152,6 +131,7 @@ function LiveSlider({ field, value, onChange }) {
           pointerEvents: "none", transition: "left 0.05s",
         }}/>
       </div>
+      {!field.editable && <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>Solo lectura: conservamos el valor original de Mirada Libre hasta confirmar su contrato de edición.</p>}
     </div>
   );
 }
@@ -168,7 +148,7 @@ function SensiPreview({ general }) {
     const rect = areaRef.current.getBoundingClientRect();
     const dx = clientX - last.current.x;
     const dy = clientY - last.current.y;
-    const factor = 0.3 + (general / 200) * 1.4; // referencia proporcional, no es la física real del juego
+    const factor = 0.3 + (general / SENSITIVITY_FIELDS.find(field => field.key === "general").max) * 1.4; // referencia ilustrativa, no física del juego
     setPos((p) => {
       const nx = Math.min(95, Math.max(5, p.x + (dx / rect.width) * 100 * factor));
       const ny = Math.min(95, Math.max(5, p.y + (dy / rect.height) * 100 * factor));
@@ -242,7 +222,7 @@ export default function CalibradorLive() {
   const [loadingPresets, setLoadingPresets] = useState(true);
   const [selectedBase, setSelectedBase] = useState(null);
 
-  const [values, setValues] = useState(DEFAULT_VALUES);
+  const [values, setValues] = useState(null);
   const [profileName, setProfileName] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedProfiles, setSavedProfiles] = useState([]);
@@ -250,11 +230,10 @@ export default function CalibradorLive() {
   const [log, setLog] = useState([]);
   const logRef = useRef(null);
 
-  // Detector de Pantalla
+  // Estimación del navegador
   const [detecting, setDetecting] = useState(false);
   const [detectedHz, setDetectedHz] = useState(null);
-  const [rawFps, setRawFps] = useState(null);
-  const [hzFilter, setHzFilter] = useState(null);
+
 
   const pushLog = (msg, type = "info") => {
     const ts = new Date().toLocaleTimeString("es-ES", { hour12: false });
@@ -266,8 +245,8 @@ export default function CalibradorLive() {
     (async () => {
       try {
         const snap = await getDocs(collection(db, "presets"));
-        setPresets(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      } catch (e) {
+        setPresets(readLegacyCatalog("presets", snap.docs.map((d) => ({ ...d.data(), id: d.id })), { transport: true }));
+      } catch {
         pushLog("✗ Error al cargar los aparatos base.", "error");
       } finally {
         setLoadingPresets(false);
@@ -284,8 +263,13 @@ export default function CalibradorLive() {
     try {
       const q = query(collection(db, "perfiles_personalizados"), where("uid", "==", user.uid));
       const snap = await getDocs(q);
-      setSavedProfiles(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-    } catch (e) {
+      const saved = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+      const valid = saved.filter(p => {
+        try { sensitivitySnapshot(p); return true; }
+        catch { pushLog("Un ajuste guardado contiene valores inválidos. No se modificó ni eliminó.", "error"); return false; }
+      });
+      setSavedProfiles(valid);
+    } catch {
       pushLog("✗ No se pudieron cargar tus perfiles guardados.", "error");
     } finally {
       setLoadingSaved(false);
@@ -295,7 +279,6 @@ export default function CalibradorLive() {
   const brands = ["Todos", ...Array.from(new Set(presets.map((p) => p.brand))).sort()];
   const filtered = presets
     .filter((p) => brand === "Todos" ? true : p.brand === brand)
-    .filter((p) => hzFilter ? extractHz(p.notes) === hzFilter : true)
     .filter((p) => {
       const s = search.trim().toLowerCase();
       if (!s) return true;
@@ -306,58 +289,46 @@ export default function CalibradorLive() {
 
   function loadBase(p) {
     setSelectedBase(p);
-    setValues({
-      general: p.general, redDot: p.redDot, x2: p.x2, x4: p.x4, awm: p.awm, freeLook: p.freeLook,
-    });
+    setValues(sensitivitySnapshot(p));
     pushLog(`✓ Punto de partida cargado: ${p.brand} ${p.model} (${p.profile})`);
   }
 
   function handleSliderChange(key, val) {
-    setValues((v) => ({ ...v, [key]: val }));
+    try { setValues(changeSensitivity(values, key, val)); }
+    catch (error) { pushLog(error.message, "error"); }
   }
 
   function handleDetectScreen() {
     setDetecting(true);
     setDetectedHz(null);
-    pushLog("📡 Midiendo la tasa de refresco real de tu pantalla...");
-    measureRefreshRate((snapped, raw) => {
+    pushLog("📡 Estimando la renderización del navegador...");
+    measureRefreshRate(raw => {
       setDetecting(false);
-      setDetectedHz(snapped);
-      setRawFps(raw);
-      pushLog(`✓ Pantalla detectada: ${snapped}Hz (medido: ${raw}Hz real)`, "success");
+      setDetectedHz(raw);
+      pushLog(raw === null ? "Medición interrumpida: mantén la página visible." : `Estimación: ${raw} cuadros/s en el navegador; no mide el juego.`);
     });
   }
 
-  function applyHzFilter() {
-    setHzFilter(detectedHz);
-    setBrand("Todos");
-    setSearch("");
-    pushLog(`✓ Filtrando aparatos con pantalla de ${detectedHz}Hz.`);
-  }
-
-  function clearHzFilter() {
-    setHzFilter(null);
-  }
-
   async function handleSave() {
+    if (!values) { pushLog("Elige una base antes de guardar.", "error"); return; }
     const user = auth.currentUser;
     if (!user) { pushLog("✗ Necesitas iniciar sesión para guardar.", "error"); return; }
     const name = profileName.trim() || `Ajuste ${new Date().toLocaleDateString("es-ES")}`;
     setSaving(true);
     pushLog(`… Guardando "${name}"...`);
     try {
-      await addDoc(collection(db, "perfiles_personalizados"), {
+      await saveSensitivitySnapshot(values, snapshot => addDoc(collection(db, "perfiles_personalizados"), {
         uid: user.uid,
         nombre: name,
         baseBrand: selectedBase?.brand || null,
         baseModel: selectedBase?.model || null,
-        ...values,
+        ...snapshot,
         createdAt: serverTimestamp(),
-      });
+      }));
       pushLog(`✓ "${name}" guardado en tu cuenta.`, "success");
       setProfileName("");
       loadSavedProfiles();
-    } catch (e) {
+    } catch {
       pushLog("✗ Error al guardar. Intenta de nuevo.", "error");
     } finally {
       setSaving(false);
@@ -369,13 +340,13 @@ export default function CalibradorLive() {
       await deleteDoc(doc(db, "perfiles_personalizados", id));
       setSavedProfiles((list) => list.filter((p) => p.id !== id));
       pushLog(`✓ "${name}" eliminado.`);
-    } catch (e) {
+    } catch {
       pushLog("✗ No se pudo eliminar.", "error");
     }
   }
 
   function loadSavedIntoSliders(p) {
-    setValues({ general: p.general, redDot: p.redDot, x2: p.x2, x4: p.x4, awm: p.awm, freeLook: p.freeLook });
+    setValues(sensitivitySnapshot(p));
     setSelectedBase(p.baseBrand ? { brand: p.baseBrand, model: p.baseModel, profile: "" } : null);
     pushLog(`✓ Perfil "${p.nombre}" cargado en los sliders.`);
   }
@@ -412,15 +383,15 @@ export default function CalibradorLive() {
           lineHeight: 1.6,
         }}>
           <span style={{ color: "var(--gold)", fontWeight: 700 }}>⚡ Cómo funciona:</span>{" "}
-          Elige un aparato como punto de partida, ajusta los sliders a tu gusto, prueba el efecto en la vista previa y guarda tu propio perfil — queda vinculado a tu cuenta para siempre.
+          Elige una base recomendada sin validación registrada y crea un ajuste personalizable. Conserva tus valores actuales. La vista previa es ilustrativa; no valida resultados en Free Fire. Mirada Libre se conserva sin cambios.
         </div>
 
-        {/* Detector de Pantalla */}
-        <SectionBlock title="Detector de Pantalla" icon="📡" color="#27AE60" borderColor="rgba(39,174,96,0.3)" bgColor="rgba(39,174,96,0.04)">
+        {/* Estimación del navegador */}
+        <SectionBlock title="Estimación del navegador" icon="📡" color="#27AE60" borderColor="rgba(39,174,96,0.3)" bgColor="rgba(39,174,96,0.04)">
           {!detectedHz && !detecting && (
             <>
               <p style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.6, marginBottom: "12px" }}>
-                Medimos la tasa de refresco real de tu pantalla en vivo — sin necesidad de buscar tu modelo manualmente.
+                Estimamos cuadros por segundo de esta página. No identifica tu dispositivo, sus Hz físicos ni los FPS de Free Fire.
               </p>
               <button
                 onClick={handleDetectScreen}
@@ -431,7 +402,7 @@ export default function CalibradorLive() {
                   fontSize: "14px", letterSpacing: "1px", cursor: "pointer",
                 }}
               >
-                📡 DETECTAR MI PANTALLA
+                📡 ESTIMAR RENDERIZACIÓN
               </button>
             </>
           )}
@@ -471,23 +442,13 @@ export default function CalibradorLive() {
               }}>
                 <div style={{
                   fontFamily: "'Bebas Neue', sans-serif", fontSize: "32px", color: "#27AE60", lineHeight: 1,
-                }}>{detectedHz}<span style={{ fontSize: "14px" }}>Hz</span></div>
+                }}>{detectedHz}<span style={{ fontSize: "14px" }}> cuadros/s</span></div>
                 <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.5 }}>
-                  Tasa de refresco real detectada<br/>
-                  <span style={{ opacity: 0.6 }}>(medición cruda: ~{rawFps}Hz)</span>
+                  Estimación local del navegador<br/>
+                  <span style={{ opacity: 0.6 }}>No se usa para recomendar valores.</span>
                 </div>
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  onClick={applyHzFilter}
-                  style={{
-                    flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--border-gold)",
-                    background: "rgba(212,160,23,0.08)", color: "var(--gold)",
-                    fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, fontSize: "12px", cursor: "pointer",
-                  }}
-                >
-                  Filtrar aparatos con {detectedHz}Hz
-                </button>
                 <button
                   onClick={handleDetectScreen}
                   title="Medir de nuevo"
@@ -505,16 +466,6 @@ export default function CalibradorLive() {
 
         {/* Punto de partida */}
         <SectionBlock title="Punto de Partida" icon="📱" color="#D4A017" borderColor="var(--border-gold)" bgColor="rgba(212,160,23,0.04)">
-          {hzFilter && (
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              marginBottom: "10px", padding: "7px 12px", borderRadius: "7px",
-              background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.25)",
-            }}>
-              <span style={{ fontSize: "11px", color: "#27AE60" }}>📡 Filtrando por {hzFilter}Hz detectado</span>
-              <button onClick={clearHzFilter} style={{ background: "none", border: "none", color: "#27AE60", cursor: "pointer", fontSize: "14px", padding: 0 }}>✕</button>
-            </div>
-          )}
           <div style={{ display: "flex", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
             <select value={brand} onChange={(e) => setBrand(e.target.value)} className="fh-select" style={{ flex: 1, minWidth: "120px", maxWidth: "170px" }}>
               {brands.map((b) => <option key={b} value={b}>{b}</option>)}
@@ -529,9 +480,7 @@ export default function CalibradorLive() {
               <div style={{ fontSize: "12px", color: "var(--text-muted)", padding: "8px 0" }}>Cargando aparatos...</div>
             ) : filtered.length === 0 ? (
               <div style={{ fontSize: "12px", color: "var(--text-muted)", padding: "8px 0", textAlign: "center" }}>
-                {hzFilter
-                  ? `Todavía no tenemos aparatos con ${hzFilter}Hz en la base — prueba buscar manualmente.`
-                  : "No se encontró ningún aparato."}
+                No se encontró una base. No asumas compatibilidad con otro modelo.
               </div>
             ) : filtered.slice(0, 30).map((p) => (
               <div
@@ -555,13 +504,13 @@ export default function CalibradorLive() {
         {/* Ajuste fino */}
         <SectionBlock title="Ajuste Fino" icon="🎚️" color="#1A6FA8" borderColor="rgba(26,111,168,0.3)" bgColor="rgba(26,111,168,0.04)">
           {SLIDER_FIELDS.map((f) => (
-            <LiveSlider key={f.key} field={f} value={values[f.key]} onChange={handleSliderChange} />
+            <LiveSlider key={f.key} field={f} value={values?.[f.key]} onChange={handleSliderChange} />
           ))}
         </SectionBlock>
 
         {/* Vista previa */}
         <SectionBlock title="Vista Previa" icon="🎯" color="#1E8C4A" borderColor="rgba(30,140,74,0.3)" bgColor="rgba(30,140,74,0.04)">
-          <SensiPreview general={values.general} />
+          {values ? <SensiPreview general={values.general} /> : <p>Selecciona una base para ver la referencia.</p>}
         </SectionBlock>
 
         {/* Guardar */}
@@ -575,7 +524,7 @@ export default function CalibradorLive() {
           />
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !values}
             style={{
               width: "100%", padding: "12px", borderRadius: "8px", border: "none",
               background: saving ? "rgba(212,160,23,0.15)" : "linear-gradient(90deg,#8A6610,#D4A017,#F0C040,#D4A017)",

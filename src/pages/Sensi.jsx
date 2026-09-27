@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
+import { readLegacyCatalog } from "../domain/legacyCatalog.js";
+import { CatalogNotice, CopyFallback } from "../components/CatalogNotice.jsx";
+import { useClipboard } from "../hooks/useClipboard.js";
+import { SENSITIVITY_FIELDS } from "../domain/configContracts.js";
 import { buildSupportMailto } from "../utils/support.js";
 
 // ── TOAST ──────────────────────────────────────────────
@@ -42,11 +46,11 @@ const STAT_COLORS = {
   freeLook:"#10B981",   // green
 };
 
-function StatBar({ label, value, max = 200, color }) {
+export function StatBar({ label, value, max, color }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <div style={{ fontSize: "9px", letterSpacing: "1.5px", color: "#3A4060", textTransform: "uppercase", fontWeight: 600, width: "62px", flexShrink: 0 }}>
+      <div style={{ fontSize: "9px", letterSpacing: "1px", color: "#6A78A8", textTransform: "uppercase", fontWeight: 600, width: "85px", flexShrink: 0 }}>
         {label}
       </div>
       <div style={{ flex: 1, height: "5px", background: "#0D1018", borderRadius: "3px", overflow: "hidden", position: "relative" }}>
@@ -67,38 +71,9 @@ function StatBar({ label, value, max = 200, color }) {
 }
 
 // ── BADGE DE GAMA ──────────────────────────────────────
-function GamaBadge({ notes }) {
-  const n = notes?.toLowerCase() || "";
-  let label, color;
-  if (n.includes("144hz"))     { label = "144Hz · ELITE"; color = "#E55353"; }
-  else if (n.includes("120hz")) { label = "120Hz · PRO";  color = "#D4AA00"; }
-  else if (n.includes("90hz"))  { label = "90Hz · MED";   color = "#3B82F6"; }
-  else                          { label = "60Hz · BASE";  color = "#4A5578"; }
-
-  const r = parseInt(color.substring(1,3),16);
-  const g = parseInt(color.substring(3,5),16);
-  const b = parseInt(color.substring(5,7),16);
-
-  return (
-    <span style={{
-      display: "inline-block",
-      background: `rgba(${r},${g},${b},0.10)`,
-      border: `1px solid rgba(${r},${g},${b},0.25)`,
-      color,
-      fontSize: "8px",
-      fontWeight: 700,
-      letterSpacing: "1.5px",
-      padding: "2px 7px",
-      borderRadius: "4px",
-      textTransform: "uppercase",
-    }}>
-      {label}
-    </span>
-  );
-}
 
 // ── CARD DE PRESET ─────────────────────────────────────
-function PresetCard({ p, onCopy, isPopular, idx }) {
+export function PresetCard({ p, onCopy, isPopular, idx }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -147,7 +122,7 @@ function PresetCard({ p, onCopy, isPopular, idx }) {
             {p.brand} {p.model}
           </div>
           <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", alignItems: "center" }}>
-            <GamaBadge notes={p.notes} />
+
             {isPopular && (
               <span style={{
                 display: "inline-block",
@@ -161,7 +136,7 @@ function PresetCard({ p, onCopy, isPopular, idx }) {
                 borderRadius: "4px",
                 textTransform: "uppercase",
               }}>
-                🔥 Popular
+                Selección editorial
               </span>
             )}
           </div>
@@ -169,23 +144,19 @@ function PresetCard({ p, onCopy, isPopular, idx }) {
 
         {/* DPI block */}
         <div style={{ textAlign: "right", flexShrink: 0, padding: "4px 10px", borderRadius: "8px", background: "rgba(212,170,0,0.06)", border: "1px solid rgba(212,170,0,0.18)" }}>
-          <div style={{ fontSize: "8px", color: "#8A6E00", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 600 }}>DPI</div>
+          <div style={{ fontSize: "8px", color: "#8A6E00", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 600 }}>DPI legado · no requerido</div>
           <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "20px", fontWeight: 700, color: "#D4AA00", lineHeight: 1, letterSpacing: "0.5px" }}>
-            {p.dpi || "—"}
+            {p.integrity.dpi.status === "not_applicable" ? "No aplica" : p.dpi}
           </div>
         </div>
       </div>
 
       {/* Stat bars */}
       <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px", padding: "10px 12px", background: "#080A10", borderRadius: "8px", border: "1px solid #10131C" }}>
-        <StatBar label="General"  value={p.general}  color={STAT_COLORS.general} />
-        <StatBar label="Red Dot"  value={p.redDot}   color={STAT_COLORS.redDot} />
-        <StatBar label="Mira 2x"  value={p.x2}       color={STAT_COLORS.x2} />
-        <StatBar label="Mira 4x"  value={p.x4}       color={STAT_COLORS.x4} />
-        <StatBar label="AWM"      value={p.awm}      color={STAT_COLORS.awm} />
-        <StatBar label="Libre"    value={p.freeLook} max={30} color={STAT_COLORS.freeLook} />
+        {SENSITIVITY_FIELDS.map(field => <StatBar key={field.key} label={field.label} value={p[field.key]} max={field.max} color={STAT_COLORS[field.key]} />)}
       </div>
 
+      <CatalogNotice record={p} />
       {/* Note */}
       {p.notes && (
         <div
@@ -207,7 +178,7 @@ function PresetCard({ p, onCopy, isPopular, idx }) {
         >
           <span style={{ color: "#8A6E00", flexShrink: 0, marginTop: "1px", fontWeight: 700 }}>ℹ</span>
           <span style={{ flex: 1 }}>
-            {expanded ? p.notes : p.notes.slice(0, 60) + (p.notes.length > 60 ? "..." : "")}
+            Archivo original sin revisar: {expanded ? p.notes : p.notes.slice(0, 60) + (p.notes.length > 60 ? "..." : "")}
           </span>
           {p.notes.length > 60 && (
             <span style={{ color: "#8A6E00", fontSize: "10px", flexShrink: 0 }}>
@@ -253,7 +224,7 @@ function PresetCard({ p, onCopy, isPopular, idx }) {
 }
 
 // ── COMPONENTE PRINCIPAL ───────────────────────────────
-const POPULAR_MODELS = [
+const EDITORIAL_MODELS = [
   "Samsung A06", "Samsung A15", "Samsung A16", "Samsung A56",
   "Xiaomi Redmi Note 12", "Xiaomi Redmi Note 13", "Xiaomi Redmi 14C",
   "Motorola Moto G15", "Motorola Moto G54",
@@ -267,7 +238,7 @@ export default function Sensi() {
   const [brand, setBrand] = useState("Todos");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
-  const [toast, setToast] = useState(false);
+  const { toast, manualText, copy, closeManual } = useClipboard();
   const [onlyPopular, setOnlyPopular] = useState(false);
 
   const brands = useMemo(() => {
@@ -286,19 +257,19 @@ export default function Sensi() {
       })
       .filter((i) => {
         if (!onlyPopular) return true;
-        return POPULAR_MODELS.includes(`${i.brand} ${i.model}`);
+        return EDITORIAL_MODELS.includes(`${i.brand} ${i.model}`);
       })
       .sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`));
   }, [items, brand, search, onlyPopular]);
 
-  const isPopular = (p) => POPULAR_MODELS.includes(`${p.brand} ${p.model}`);
+  const isPopular = (p) => EDITORIAL_MODELS.includes(`${p.brand} ${p.model}`);
 
   async function fetchAll() {
     setLoading(true);
     setError("");
     try {
       const snap = await getDocs(collection(db, "presets"));
-      setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setItems(readLegacyCatalog("presets", snap.docs.map((d) => ({ ...d.data(), id: d.id })), { transport: true }));
     } catch (e) {
       console.error(e);
       setError("Error al cargar los presets del servidor.");
@@ -319,17 +290,16 @@ export default function Sensi() {
       `Mira 4x:      ${p.x4}\n` +
       `AWM:          ${p.awm}\n` +
       `Mirada Libre: ${p.freeLook}\n` +
-      `DPI:          ${p.dpi || "—"}\n` +
+      `DPI:          ${p.integrity.dpi.status === "not_applicable" ? "No aplica" : p.dpi} (dato legado; no cambies la escala del sistema)\n` +
       `━━━━━━━━━━━━━━━━\n` +
-      `Panel FullHead ⚡`;
-    navigator.clipboard.writeText(text);
-    setToast(true);
-    setTimeout(() => setToast(false), 2000);
-  }, []);
+      `Base sin validación registrada. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
+    void copy(text);
+  }, [copy]);
 
   return (
     <div className="module-page">
       <Toast visible={toast} />
+      <CopyFallback text={manualText} onClose={closeManual} />
 
       {/* Header */}
       <div className="module-header">
@@ -340,7 +310,7 @@ export default function Sensi() {
         </button>
         <div>
           <div className="module-title">Sensibilidad por Celular</div>
-          <div className="module-subtitle">Presets calibrados por DPI — copia y aplica</div>
+          <div className="module-subtitle">Base recomendada · Ajuste personalizable</div>
         </div>
       </div>
 
@@ -361,7 +331,7 @@ export default function Sensi() {
           gap: "8px",
         }}>
           <span style={{ color: "#D4AA00", fontWeight: 700, flexShrink: 0 }}>⚡ Método FullHead:</span>
-          <span>Valores calibrados pelo DPI real de cada celular. Busca o teu modelo, copia e aplica direto no Free Fire.</span>
+          <span>Busca tu modelo y revisa una base sin validación registrada. Copiar guarda texto; debes introducir los valores manualmente en el juego.</span>
         </div>
 
         {/* Filtros */}
@@ -404,7 +374,7 @@ export default function Sensi() {
               transition: "all 0.2s",
             }}
           >
-            🔥 Solo Populares
+            Selección editorial
           </button>
           <span className="count-tag">
             {loading ? "Cargando..." : `${filtered.length} modelo(s)`}
@@ -482,7 +452,7 @@ export default function Sensi() {
             <div style={{ width: "2px", alignSelf: "stretch", background: "#D4AA00", opacity: 0.3, borderRadius: "2px", flexShrink: 0 }} />
             <div>
               <strong style={{ color: "#6A78A8", fontWeight: 600 }}>Pro tip:</strong>{" "}
-              Aplica los valores en Free Fire → Configuración → Sensibilidad. Practica 10–15 minutos en modo entrenamiento antes de jugar ranked. Ajusta de a 2 puntos por vez si algo no se siente bien.
+              Guarda tus valores actuales antes de probar una base. Cambia un control a la vez y compara en el juego. Si no encuentras tu variante, no asumas que otro modelo es equivalente.
             </div>
           </div>
         )}

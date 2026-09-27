@@ -6,33 +6,33 @@ const RAW_STEPS = [
     group: "Calibra tu celular",
     num: "01",
     title: "Sensibilidad por Celular",
-    desc: "Es el corazón del sistema. Busca tu marca y modelo en el buscador, o filtra por marca en el menú desplegable. Cada tarjeta muestra los valores calibrados (General, Red Dot, Mira 2x, Mira 4x, AWM y Mirada Libre) según el DPI real de tu pantalla.",
+    desc: "Busca tu marca y modelo para consultar una base recomendada. Los seis valores se conservan del catálogo original y no cuentan con validación registrada para cada variante. Anota tu configuración actual antes de probar cambios.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="11" cy="11" r="7"/>
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
     ),
-    tip: "Toca \"COPIAR SENSI\" en la tarjeta de tu celular, abre Free Fire → Configuración → Sensibilidad y pega cada valor en su casilla correspondiente.",
+    tip: "Toca \"COPIAR SENSI\" para guardar una referencia de texto. Introduce los valores manualmente en los controles de sensibilidad del juego.",
   },
   {
     group: "Calibra tu celular",
     num: "05",
-    title: "Perfiles Geral y Pro",
-    desc: "Cada celular tiene un perfil \"Geral\" (equilibrado, para el día a día) y algunos también un perfil \"Pro\" (más cerrado, para quien ya domina la sensibilidad base). El badge de color (60Hz BASE, 90Hz MED, 120Hz PRO, 144Hz ELITE) te muestra la gama de tu pantalla de un vistazo.",
+    title: "Perfiles del catálogo",
+    desc: "El catálogo legado contiene un perfil llamado \"Geral\" por modelo. Ese nombre identifica la base original, no una certificación. Los Hz y la compatibilidad quedan desconocidos hasta confirmar una fuente.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="12" cy="8" r="4"/>
         <path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
       </svg>
     ),
-    tip: "Activa \"🔥 Solo Populares\" en la Sensibilidad para ver primero los modelos más usados por la comunidad LATAM.",
+    tip: "La selección editorial es una lista de modelos elegidos para facilitar la búsqueda; no mide popularidad ni eficacia.",
   },
   {
     group: "Calibra tu celular",
     num: "02",
-    title: "HUD Pro",
-    desc: "Aquí encuentras el tamaño y la posición ideal de cada botón (disparo, mira, agachar, saltar, pared gloo) para tu modelo exacto. Usa el filtro \"2 Dedos\" o \"3 Dedos\" según cómo juegas.",
+    title: "Guía textual de HUD",
+    desc: "Consulta instrucciones textuales de referencia. La base actual solo contiene guías de 2 dedos, sin imagen, código ni coordenadas completas. Los filtros muestran únicamente la cobertura disponible.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <rect x="2" y="6" width="20" height="12" rx="3"/>
@@ -41,13 +41,13 @@ const RAW_STEPS = [
         <circle cx="18" cy="14" r="1.2" fill="currentColor" stroke="none"/>
       </svg>
     ),
-    tip: "Si tu celular aguanta \"3 Dedos\", pruébalo en modo entrenamiento primero — libera el pulgar derecho para disparar y mirar al mismo tiempo.",
+    tip: "Copiar la guía no importa un HUD. Revisa el alcance de tus dedos y no apliques instrucciones marcadas como pendientes por contradicciones.",
   },
   {
     group: "Calibra tu celular",
     num: "03",
     title: "Configuraciones Pro",
-    desc: "Ajustes de gráficos, FPS, sombra y filtros optimizados para tu hardware — más el tamaño ideal de los botones de disparo y mira en porcentaje de pantalla. Todo calibrado para que tu celular no trabe en partidas largas.",
+    desc: "Opciones de gráficos, FPS, sombras y filtros del catálogo original. Confirma si existen en tu versión del juego. No garantizan rendimiento; conserva la escala actual del sistema. Los tamaños de botones se consultan en HUD.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
@@ -56,13 +56,13 @@ const RAW_STEPS = [
         <circle cx="4" cy="12" r="2"/><circle cx="12" cy="10" r="2"/><circle cx="20" cy="14" r="2"/>
       </svg>
     ),
-    tip: "Toca \"COPIAR CONFIG\" y aplica cada ajuste en Free Fire → Configuración → Gráficos, en el mismo orden que aparece en la tarjeta.",
+    tip: "Copia una referencia, confirma cada opción y prueba un cambio a la vez. Si una opción no está disponible, conserva tu ajuste anterior.",
   },
   {
     group: "Calibra tu celular",
     num: "06",
     title: "Calibrador en Vivo",
-    desc: "Detecta la tasa de refresco real de tu pantalla en un toque, elige un aparato base, mueve los sliders de sensibilidad a tu gusto, prueba el efecto en la vista previa y guarda tu propio perfil personalizado — queda guardado en tu cuenta para siempre.",
+    desc: "Complemento para crear un ajuste personalizable desde una base. La vista previa es ilustrativa y no reproduce el juego. Mirada Libre se conserva en solo lectura hasta confirmar su contrato de edición. Puedes guardar los valores en tu cuenta.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>
@@ -74,7 +74,7 @@ const RAW_STEPS = [
     group: "Entrena y prepárate",
     num: "04",
     title: "Entrenamientos Diarios",
-    desc: "Rutinas cortas organizadas por categoría — Headshot, Arrastre, Capa, Crouch-Shot, AWM, Rush, Memoria Muscular y más — para mejorar tu puntería y reflejos con la práctica diaria, no solo con la configuración.",
+    desc: "Cuatro rutinas de referencia: disparo a la cabeza, puntería, AWM y movimiento. Su eficacia no está validada en el catálogo; observa tus propios resultados en el juego.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="12" cy="13" r="8"/>
@@ -82,7 +82,7 @@ const RAW_STEPS = [
         <line x1="9" y1="2" x2="15" y2="2"/>
       </svg>
     ),
-    tip: "10 a 15 minutos por día en modo entrenamiento rinden más que una hora sin rutina. Elige una categoría a la vez.",
+    tip: "Elige una rutina y conserva condiciones similares al comparar. El temporizador no comprueba que hayas practicado y puede pausarse cuando salgas al juego.",
   },
   {
     group: "Entrena y prepárate",
@@ -128,23 +128,23 @@ const faq = [
   },
   {
     q: "¿No encuentro mi modelo exacto?",
-    a: "Seguimos agregando celulares según lo que la comunidad reporta. Mientras tanto, busca el modelo más cercano de tu misma marca y gama (mismo Hz y tamaño de pantalla) — el resultado será muy similar.",
+    a: "Si no encuentras tu variante, conserva tus valores actuales. Otro modelo de la misma marca no garantiza compatibilidad. Puedes comunicar tu modelo a soporte; no generamos una configuración exacta sin datos.",
   },
   {
-    q: "¿Cuál es la diferencia entre perfil \"Geral\" y \"Pro\"?",
-    a: "\"Geral\" es el punto de partida recomendado para la mayoría de los jugadores. \"Pro\" reduce un poco más la sensibilidad general para quien ya tiene consistencia y busca máxima precisión — pruébalo solo después de unos días usando el perfil Geral.",
+    q: "¿Qué significa el perfil \"Geral\"?",
+    a: "\"Geral\" es el nombre del único perfil legado disponible por modelo. No implica que haya sido probado ni que existan perfiles Pro adicionales.",
   },
   {
     q: "¿Cómo aplico los valores en el juego?",
-    a: "Copia los valores con el botón correspondiente (COPIAR SENSI, COPIAR CONFIG), abre Free Fire y pégalos manualmente en Configuración → Sensibilidad o → Gráficos, según el módulo. El juego no permite importar configuraciones automáticamente.",
+    a: "Copiar solo genera texto de referencia. Abre los ajustes oficiales del juego e introduce manualmente los valores que decidas probar. FullHead no importa un HUD ni modifica archivos del juego.",
   },
   {
     q: "¿Mis datos se sincronizan entre dispositivos?",
-    a: "Sí. Tu cuenta está vinculada a tu email. Inicia sesión desde cualquier dispositivo y tendrás acceso a los mismos módulos y ajustes.",
+    a: "Los ajustes que guardas en el Calibrador quedan vinculados a tu cuenta. Copiar una base no la guarda ni aplica cambios dentro de Free Fire.",
   },
   {
     q: "¿Qué es el Calibrador en Vivo?",
-    a: "Es tu propio laboratorio de sensibilidad: partes de un aparato base, ajustas cada valor con sliders en tiempo real, pruebas el efecto en una vista previa y guardas el resultado como un perfil personalizado vinculado a tu cuenta. Puedes crear cuantos perfiles quieras.",
+    a: "Es un editor complementario: seleccionas una base, ajustas los controles habilitados y guardas un perfil personal. La vista previa no valida precisión ni resultados. Mirada Libre conserva su valor original y las pruebas se realizan manualmente en el juego.",
   },
   {
     q: "¿FullHead funciona sin internet?",
@@ -193,16 +193,16 @@ export default function Instalacion() {
             fontSize: "22px", letterSpacing: "3px",
             color: "var(--gold)", marginBottom: "8px",
           }}>
-            Bienvenido a tu Sistema de Calibración
+            Tus bases y ajustes de FullHead
           </div>
           <p style={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.7, maxWidth: "680px" }}>
-            FullHead no es un hack ni un mod — es una <strong style={{ color: "var(--gold)" }}>base de datos de calibración</strong> construida a partir de las características reales de cada celular (densidad de pantalla, tasa de actualización y hardware). Siete módulos, un mismo objetivo: que encuentres tu configuración exacta en segundos y la apliques tú mismo, directo en el juego.
+            FullHead reúne <strong style={{ color: "var(--gold)" }}>bases de sensibilidad, guías de HUD y opciones de Config Pro</strong>. Son referencias sin validación registrada para cada dispositivo. El Calibrador es un complemento para personalizar; tú aplicas los cambios manualmente en los ajustes oficiales del juego.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "14px" }}>
             {[
               { icon: "🎯", text: "Sensibilidad por celular" },
               { icon: "🎮", text: "HUD por modelo" },
-              { icon: "⚙️", text: "Gráficos optimizados" },
+              { icon: "⚙️", text: "Opciones de gráficos" },
               { icon: "🏆", text: "Entrenamientos diarios" },
               { icon: "🎚️", text: "Calibrador personalizado" },
               { icon: "📡", text: "Centro de Conexión" },
@@ -342,7 +342,7 @@ export default function Instalacion() {
               ¡Ya conoces todo el sistema!
             </div>
             <div style={{ fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.6 }}>
-              Empieza por Sensibilidad y HUD — son los dos módulos que más rápido notarás en tu partida. Ajusta de a poco: 2 a 3 puntos por vez, nunca todo de golpe. Y antes de abrir el juego, pasa por el Centro de Conexión para revisar tu red.
+              Empieza por revisar tu sensibilidad, HUD y gráficos actuales. Conserva una referencia antes de cambiar algo y compara un ajuste a la vez. Una base recomendada no garantiza mejoras en tus partidas.
             </div>
           </div>
         </div>
