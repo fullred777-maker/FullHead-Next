@@ -127,7 +127,7 @@ export function ConfigCard({ c, onCopy }) {
       </div>
 
       <CatalogNotice record={c} />
-      <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>Confirma si cada opción aparece en tu juego. Esta comprobación es temporal y no valida su rendimiento. Si no aparece, conserva tu ajuste actual.</p>
+      <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>Confirma si cada opción aparece en tu juego. Esta comprobación registra su disponibilidad; evalúa el rendimiento directamente en el juego.</p>
       {/* Seção: Gráficos */}
       <div className="section-header-fh" style={{ marginBottom: "8px" }}>
         <span className="section-label-fh">Gráficos & FPS</span>
@@ -227,7 +227,7 @@ export function ConfigCard({ c, onCopy }) {
         className="btn-copy"
         style={{ width: "100%", justifyContent: "center", gap: "8px" }}
         disabled={c.integrity.conflicts.length > 0}
-        title={c.integrity.conflicts.length ? "Copia suspendida hasta la revisión" : "Copiar opciones pendientes de confirmar"}
+        title={c.integrity.conflicts.length ? "Copia suspendida hasta la revisión" : "Copiar opciones recomendadas"}
         onClick={() => onCopy(c, availability)}
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -286,7 +286,7 @@ export default function Configs() {
 
   const handleCopy = useCallback((c, availability = c.integrity.availability) => {
     if (c.integrity.conflicts.length) return;
-    const optionText = key => availability[key] === "unavailable" ? "No disponible; conserva tu ajuste" : `${c[key]} (${availabilityLabel(availability[key])}; valor sin validar)`;
+    const optionText = key => availability[key] === "unavailable" ? "No disponible; conserva tu ajuste" : `${c[key]} (${availabilityLabel(availability[key])})`;
     const text =
       `⚙️ Config Pro — ${c.brand} ${c.model}\n` +
       `━━━━━━━━━━━━━━━━\n` +
@@ -297,8 +297,8 @@ export default function Configs() {
       `Filtro:         ${optionText("filters")}\n` +
       `Botones: consulta la guía textual de HUD.\n` +
       `━━━━━━━━━━━━━━━━\n` +
-      `Opciones sin confirmar en tu versión. Si no están disponibles, conserva tu ajuste actual.\n` +
-      `Base sin validación registrada. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
+      `Confirma las opciones disponibles en tu versión y conserva tu ajuste cuando una opción no aparezca.\n` +
+      `Recomendación FullHead. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
     void copy(text);
   }, [copy]);
 
@@ -316,7 +316,7 @@ export default function Configs() {
         </button>
         <div>
           <div className="module-title">Configuraciones Pro</div>
-          <div className="module-subtitle">Base recomendada · Opciones por confirmar</div>
+          <div className="module-subtitle">Recomendación FullHead · Ajustes por dispositivo</div>
         </div>
       </div>
 

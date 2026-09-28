@@ -293,7 +293,7 @@ export default function Treinos() {
   },[]);
 
   const handleCopy = useCallback((t)=>{
-    void copy(`Rutina de referencia sin validación registrada.\n⚡ ${t.title}\n━━━━━━━━━━━━━━━━\nCategoría: ${t.category}\nNivel: ${t.level}\nDuración: ${t.duration}\nFrecuencia: ${t.frequency}\n━━━━━━━━━━━━━━━━\n${t.steps}${t.notes?`\n\n💡 ${t.notes}`:""}\nPanel FullHead ⚡`);
+    void copy(`Rutina recomendada por FullHead.\n⚡ ${t.title}\n━━━━━━━━━━━━━━━━\nCategoría: ${t.category}\nNivel: ${t.level}\nDuración: ${t.duration}\nFrecuencia: ${t.frequency}\n━━━━━━━━━━━━━━━━\n${t.steps}${t.notes?`\n\n💡 ${t.notes}`:""}\nPanel FullHead ⚡`);
 
   },[copy]);
 
@@ -320,7 +320,7 @@ export default function Treinos() {
           <span style={{ fontSize:"24px",flexShrink:0 }}>⚡</span>
           <div>
             <div style={{ fontSize:"11px",fontWeight:800,color:"var(--gold)",letterSpacing:"1px",textTransform:"uppercase",marginBottom:"2px" }}>Método FullHead</div>
-            <div style={{ fontSize:"11px",color:"var(--text-muted)",lineHeight:1.5 }}>Rutinas de referencia sin resultados validados. El tiempo no acredita mejora ni práctica completada; el timer puede pausarse al salir al juego.</div>
+            <div style={{ fontSize:"11px",color:"var(--text-muted)",lineHeight:1.5 }}>Rutinas recomendadas para practicar en el juego. Usa el temporizador como guía; puede pausarse al cambiar de aplicación.</div>
           </div>
         </div>
 

@@ -10,7 +10,7 @@ const UPDATE_NOTICE_KEY = "fh_update_seen_v4_conexion";
 const modules = [
   {
     title: "Sensibilidad por Celular",
-    desc: "Bases recomendadas por modelo, sin validación registrada.",
+    desc: "Recomendaciones de sensibilidad organizadas por modelo.",
     route: "/sensi",
     accent: "#3B82F6",
     badge: { text: "PRO", bg: "rgba(212,170,0,0.1)", color: "#D4AA00", border: "rgba(212,170,0,0.2)" },
@@ -36,7 +36,7 @@ const modules = [
   },
   {
     title: "Configuraciones Pro",
-    desc: "Opciones de gráficos y FPS por confirmar en el juego.",
+    desc: "Recomendaciones de gráficos y FPS para ajustar en el juego.",
     route: "/configs",
     accent: "#06B6D4",
     badge: { text: "PRO", bg: "rgba(212,170,0,0.1)", color: "#D4AA00", border: "rgba(212,170,0,0.2)" },

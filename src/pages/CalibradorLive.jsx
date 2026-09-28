@@ -383,7 +383,7 @@ export default function CalibradorLive() {
           lineHeight: 1.6,
         }}>
           <span style={{ color: "var(--gold)", fontWeight: 700 }}>⚡ Cómo funciona:</span>{" "}
-          Elige una base recomendada sin validación registrada y crea un ajuste personalizable. Conserva tus valores actuales. La vista previa es ilustrativa; no valida resultados en Free Fire. Mirada Libre se conserva sin cambios.
+          Elige una recomendación de partida y crea un ajuste personalizable. Conserva tus valores actuales. La vista previa ayuda a comparar los cambios; los resultados se evalúan directamente en Free Fire. Mirada Libre se conserva sin cambios.
         </div>
 
         {/* Estimación del navegador */}

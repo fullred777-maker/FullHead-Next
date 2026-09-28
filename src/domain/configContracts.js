@@ -44,7 +44,7 @@ export function knownValue(value, { notApplicable = false } = {}) {
 }
 
 export function availabilityLabel(status = 'unconfirmed') {
-  return ({ available: 'Disponible: confirmado por ti', unavailable: 'No disponible', unconfirmed: 'Disponibilidad sin confirmar' })[status] ?? 'Disponibilidad sin confirmar';
+  return ({ available: 'Disponible: confirmado por ti', unavailable: 'No disponible', unconfirmed: 'Recomendación' })[status] ?? 'Recomendación';
 }
 
 export function validateRecord(kind, record, index = 0, { file = `${kind}.json`, transport = false } = {}) {

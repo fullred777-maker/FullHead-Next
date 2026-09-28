@@ -1,6 +1,6 @@
-const CACHE_NAME = 'panel-fullhead-v6';
-const STATIC_CACHE = 'static-v6';
-const DYNAMIC_CACHE = 'dynamic-v6';
+const CACHE_NAME = 'panel-fullhead-v7';
+const STATIC_CACHE = 'static-v7';
+const DYNAMIC_CACHE = 'dynamic-v7';
 
 const staticAssets = [
   '/',
@@ -22,7 +22,7 @@ self.addEventListener('install', (event) => {
           console.warn('[Service Worker] Error caching static assets:', err);
         });
       }),
-      caches.open(CACHE_NAME).then((cache) => {
+      caches.open(CACHE_NAME).then(() => {
         console.log('[Service Worker] Cache storage ready');
       })
     ])
@@ -68,35 +68,10 @@ self.addEventListener('fetch', (event) => {
     if (new URL(request.url).hostname === 'speed.cloudflare.com') {
       return;
     }
-  } catch (e) { /* URL inválida: segue o fluxo normal */ }
+  } catch { /* URL inválida: segue o fluxo normal */ }
   
-  // For API requests - network first
+  // Never cache API or Firestore responses. They may depend on the signed-in user.
   if (request.url.includes('/api/') || request.url.includes('firestore')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (!response || response.status !== 200) {
-            return response;
-          }
-          
-          // Cache successful API responses
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cached API response
-          return caches.match(request).then((response) => {
-            return response || new Response(
-              JSON.stringify({ offline: true, message: 'Modo offline' }),
-              { headers: { 'Content-Type': 'application/json' } }
-            );
-          });
-        })
-    );
     return;
   }
   
@@ -205,7 +180,7 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
+    self.clients.matchAll({ type: 'window' }).then((clientList) => {
       // Check if app is already open
       for (let client of clientList) {
         if (client.url === '/' && 'focus' in client) {
@@ -213,8 +188,8 @@ self.addEventListener('notificationclick', (event) => {
         }
       }
       // Open new window if not open
-      if (clients.openWindow) {
-        return clients.openWindow('/');
+      if (self.clients.openWindow) {
+        return self.clients.openWindow('/');
       }
     })
   );

@@ -293,7 +293,7 @@ export default function Sensi() {
       `Mirada Libre: ${p.freeLook}\n` +
       `DPI:          ${p.integrity.dpi.status === "not_applicable" ? "No aplica" : p.dpi} (dato legado; no cambies la escala del sistema)\n` +
       `━━━━━━━━━━━━━━━━\n` +
-      `Base sin validación registrada. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
+      `Recomendación FullHead. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
     void copy(text);
   }, [copy]);
 
@@ -334,7 +334,7 @@ export default function Sensi() {
           gap: "8px",
         }}>
           <span style={{ color: "#D4AA00", fontWeight: 700, flexShrink: 0 }}>⚡ Método FullHead:</span>
-          <span>Busca tu modelo y revisa una base sin validación registrada. Copiar guarda texto; debes introducir los valores manualmente en el juego.</span>
+          <span>Busca tu modelo y revisa una recomendación de partida. Copiar guarda texto; debes introducir los valores manualmente en el juego.</span>
         </div>
 
         {/* Filtros */}

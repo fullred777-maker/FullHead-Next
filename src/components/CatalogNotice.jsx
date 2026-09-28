@@ -2,9 +2,9 @@ export function CatalogNotice({ record }) {
   const pending = record.integrity?.conflicts?.length > 0;
   return (
     <div style={{ padding: '10px 12px', marginBottom: '12px', borderRadius: '8px', border: '1px solid var(--border-gold)', background: 'rgba(212,160,23,0.06)', color: 'var(--text)', fontSize: '11px', lineHeight: 1.6 }}>
-      <strong>{pending ? 'Revisión pendiente · Sin validación registrada' : 'Base recomendada · Sin validación registrada'}</strong>
-      <div>{pending ? 'Hay instrucciones contradictorias entre HUD y Config Pro. No apliques sus tamaños de botones ni consejos hasta la revisión.' : 'Punto de partida para probar manualmente. Compatibilidad con tu variante sin confirmar.'}</div>
-      <div>Hz del dispositivo: desconocidos. Conserva la escala actual del sistema; cambiar DPI no es un requisito.</div>
+      <strong>{pending ? 'Revisión recomendada' : 'Recomendación FullHead'}</strong>
+      <div>{pending ? 'Hay instrucciones contradictorias entre HUD y Config Pro. No apliques sus tamaños de botones ni consejos hasta la revisión.' : 'Punto de partida para aplicar manualmente. Confirma las opciones disponibles en tu variante.'}</div>
+      <div>Frecuencia de pantalla: usa la opción indicada por tu dispositivo. Conserva la escala actual del sistema; cambiar DPI no es un requisito.</div>
     </div>
   );
 }

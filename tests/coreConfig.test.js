@@ -79,7 +79,7 @@ test('application capabilities remain unconfirmed, not unavailable or confirmed 
   assert.equal(entry.integrity.availability.highFps, 'unconfirmed');
   assert.equal(availabilityLabel('available'), 'Disponible: confirmado por ti');
   assert.equal(availabilityLabel('unavailable'), 'No disponible');
-  assert.equal(availabilityLabel('unconfirmed'), 'Disponibilidad sin confirmar');
+  assert.equal(availabilityLabel('unconfirmed'), 'Recomendación');
 });
 
 test('all six sensitivities survive load and mock save, including 67 and 76', async () => {

@@ -6,7 +6,7 @@ const RAW_STEPS = [
     group: "Calibra tu celular",
     num: "01",
     title: "Sensibilidad por Celular",
-    desc: "Busca tu marca y modelo para consultar una base recomendada. Los seis valores se conservan del catálogo original y no cuentan con validación registrada para cada variante. Anota tu configuración actual antes de probar cambios.",
+    desc: "Busca tu marca y modelo para consultar una recomendación de partida. Los seis valores se conservan del catálogo original. Anota tu configuración actual antes de probar cambios.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="11" cy="11" r="7"/>
@@ -74,7 +74,7 @@ const RAW_STEPS = [
     group: "Entrena y prepárate",
     num: "04",
     title: "Entrenamientos Diarios",
-    desc: "Cuatro rutinas de referencia: disparo a la cabeza, puntería, AWM y movimiento. Su eficacia no está validada en el catálogo; observa tus propios resultados en el juego.",
+    desc: "Cuatro rutinas recomendadas: disparo a la cabeza, puntería, AWM y movimiento. Observa tus propios resultados en el juego para elegir la que mejor se adapta a ti.",
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <circle cx="12" cy="13" r="8"/>
@@ -196,7 +196,7 @@ export default function Instalacion() {
             Tus bases y ajustes de FullHead
           </div>
           <p style={{ fontSize: "13px", color: "var(--text)", lineHeight: 1.7, maxWidth: "680px" }}>
-            FullHead reúne <strong style={{ color: "var(--gold)" }}>bases de sensibilidad, guías de HUD y opciones de Config Pro</strong>. Son referencias sin validación registrada para cada dispositivo. El Calibrador es un complemento para personalizar; tú aplicas los cambios manualmente en los ajustes oficiales del juego.
+            FullHead reúne <strong style={{ color: "var(--gold)" }}>recomendaciones de sensibilidad, guías de HUD y opciones de Config Pro</strong> organizadas por dispositivo. El Calibrador es un complemento para personalizar; tú aplicas los cambios manualmente en los ajustes oficiales del juego.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "14px" }}>
             {[

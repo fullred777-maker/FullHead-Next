@@ -311,7 +311,7 @@ export default function Hud() {
       h.steps + "\n" +
       `━━━━━━━━━━━━━━━━\n` +
       (h.notes ? `✓ ${h.notes}\n` : "") +
-      `Base sin validación registrada. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
+      `Recomendación FullHead. Aplicación manual. Conserva tu configuración anterior.\nFullHead ⚡`;
     void copy(text);
   }, [copy]);
 
