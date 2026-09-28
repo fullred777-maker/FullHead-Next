@@ -24,6 +24,7 @@ import AppLayout from "./components/AppLayout.jsx";
 import { inicializarNotificaciones } from "./utils/notifications.js";
 import Tutorial from "./pages/Tutorial.jsx";
 import { PlayerProfileProvider } from "./context/PlayerProfileContext.jsx";
+import { requiresInstalledApp } from "./domain/accessPolicy.js";
 
 // ─── Reset PWA via ?resetpwa na URL ──────────────────────
 if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("resetpwa")) {
@@ -105,6 +106,7 @@ function PWAController({ children }) {
   const { isStandalone, tutorialDone } = usePWA();
   const navigate = useNavigate();
   const location = useLocation();
+  const installationRequired = requiresInstalledApp(import.meta.env.VITE_FULLHEAD_ENV);
 
   const publicRoutes = ["/login", "/registro", "/esqueci-senha", "/tutorial"];
   const isPublicRoute = publicRoutes.includes(location.pathname);
@@ -122,10 +124,10 @@ function PWAController({ children }) {
 
   // Redireciona para tutorial quando aberto no navegador pela 1ª vez
   useEffect(() => {
-    if (!isStandalone && !tutorialDone && !isPublicRoute) {
+    if (installationRequired && !isStandalone && !tutorialDone && !isPublicRoute) {
       navigate("/tutorial", { replace: true });
     }
-  }, [isStandalone, tutorialDone, isPublicRoute]);
+  }, [installationRequired, isStandalone, tutorialDone, isPublicRoute, navigate]);
 
   return children;
 }
