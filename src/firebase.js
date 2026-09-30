@@ -37,7 +37,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || undefined,
 };
 
-if (firebaseConfig.projectId === PRODUCTION_FIREBASE_PROJECT_ID) {
+if (firebaseConfig.projectId === PRODUCTION_FIREBASE_PROJECT_ID || firebaseConfig.projectId !== "fullhead---next") {
   throw new Error("Conexión bloqueada: este repositorio no puede usar el Firebase de producción.");
 }
 

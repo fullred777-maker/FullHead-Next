@@ -10,6 +10,11 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
+    match /recommendations_v1/{documentId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
     match /presets/{documentId} {
       allow read: if signedIn();
       allow write: if false;

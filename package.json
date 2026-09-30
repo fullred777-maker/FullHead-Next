@@ -17,7 +17,10 @@
     "catalogs:check": "node --env-file=.env.local scripts/importCatalogs.js",
     "catalogs:import:test": "node --env-file=.env.local scripts/importCatalogs.js --write --confirm-project=fullhead---next",
     "test": "node --test tests/*.test.js",
-    "test:m1": "node --test tests/*.test.js"
+    "test:m1": "node --test tests/*.test.js",
+    "recommendations:prepare": "node scripts/prepareRecommendationsV1.js",
+    "recommendations:check": "node --env-file=.env.local scripts/importRecommendationsV1.js --dry-run",
+    "recommendations:import:test": "node --env-file=.env.local scripts/importRecommendationsV1.js --write --confirm-project=fullhead---next"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",

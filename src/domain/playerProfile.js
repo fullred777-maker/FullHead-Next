@@ -1,3 +1,4 @@
+import { normalizeSelection } from './recommendationsV1.js';
 export const PLAYER_PROFILE_VERSION = 1;
 export const PLAYER_PROFILE_FIELDS = Object.freeze(['brand', 'model', 'variant', 'fingers', 'objective', 'gameVersion']);
 
@@ -23,7 +24,8 @@ export function normalizePlayerProfile(input) {
     if (normalized.length > limit) throw new Error(`El campo ${key} supera ${limit} caracteres.`);
     result[key] = normalized;
   }
-  const unexpected = Object.keys(input).find(key => !PLAYER_PROFILE_FIELDS.includes(key));
+  if (input.selectionV1 !== undefined) result.selectionV1 = normalizeSelection(input.selectionV1);
+  const unexpected = Object.keys(input).find(key => !PLAYER_PROFILE_FIELDS.includes(key) && key !== 'selectionV1');
   if (unexpected) throw new Error(`Campo de perfil desconocido: ${unexpected}.`);
   return result;
 }

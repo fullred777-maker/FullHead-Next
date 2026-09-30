@@ -3,12 +3,10 @@ import Register from "./pages/Register.jsx";
 import Login from "./pages/Login.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, messaging } from "./firebase";
-import Sensi from "./pages/Sensi.jsx";
-import Hud from "./pages/Hud.jsx";
-import Configs from "./pages/Configs.jsx";
+const RecommendationsV1 = lazy(() => import("./components/RecommendationsV1.jsx"));
 import Treinos from "./pages/Treinos.jsx";
 import CalibradorLive from "./pages/CalibradorLive.jsx";
 import GeneradorNicks from "./pages/GeneradorNicks.jsx";
@@ -147,15 +145,15 @@ export default function App() {
         />
         <Route
           path="/sensi"
-          element={<ProtectedRoute><Sensi /></ProtectedRoute>}
+          element={<ProtectedRoute><Suspense fallback={<p role="status">Carregando catálogo V1...</p>}><RecommendationsV1 mode="sensibilidade" /></Suspense></ProtectedRoute>}
         />
         <Route
           path="/hud"
-          element={<ProtectedRoute><Hud /></ProtectedRoute>}
+          element={<ProtectedRoute><Suspense fallback={<p role="status">Carregando catálogo V1...</p>}><RecommendationsV1 mode="hud" /></Suspense></ProtectedRoute>}
         />
         <Route
           path="/configs"
-          element={<ProtectedRoute><Configs /></ProtectedRoute>}
+          element={<ProtectedRoute><Suspense fallback={<p role="status">Carregando catálogo V1...</p>}><RecommendationsV1 mode="config" /></Suspense></ProtectedRoute>}
         />
         <Route
           path="/treinos"

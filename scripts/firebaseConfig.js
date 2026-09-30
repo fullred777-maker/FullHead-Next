@@ -25,7 +25,7 @@ export function getTestFirebaseConfig(env = process.env) {
   if (missing.length > 0) {
     throw new Error(`Configuración Firebase incompleta: ${missing.join(", ")}`);
   }
-  if (config.projectId === PRODUCTION_FIREBASE_PROJECT_ID) {
+  if (config.projectId === PRODUCTION_FIREBASE_PROJECT_ID || config.projectId !== "fullhead---next") {
     throw new Error("Importación bloqueada: Firebase de produção detectado.");
   }
   if (

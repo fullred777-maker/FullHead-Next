@@ -25,7 +25,9 @@ export default function ProfileActive() {
   function handleSubmit(event) {
     event.preventDefault();
     try {
-      save(draft);
+      const next = { ...draft };
+      if (['brand','model','variant','fingers','objective'].some(k => draft[k] !== profile[k])) delete next.selectionV1;
+      save(next);
       setEditing(false);
       setError('');
     } catch (failure) {

@@ -1,3 +1,4 @@
+import { emptySelection } from '../domain/recommendationsV1.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { emptyPlayerProfile, loadPlayerProfile, playerProfileKey, savePlayerProfile } from '../domain/playerProfile.js';
 import { PlayerProfileContext } from './playerProfileContext.js';
@@ -16,11 +17,12 @@ function initialState(userId) {
 
 export function PlayerProfileProvider({ userId, children }) {
   const [state, setState] = useState(() => initialState(userId));
+  const [catalogSelection, setCatalogSelection] = useState(() => state.profile.selectionV1 || emptySelection());
 
   // Browser tabs share the same local profile for the same signed-in account.
   useEffect(() => {
     const onStorage = event => {
-      if (event.key === playerProfileKey(userId)) setState(initialState(userId));
+      if (event.key === playerProfileKey(userId)) { const next = initialState(userId); setState(next); setCatalogSelection(next.profile.selectionV1 || emptySelection()); }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -31,9 +33,10 @@ export function PlayerProfileProvider({ userId, children }) {
     if (!storage) throw new Error('El almacenamiento local no está disponible.');
     const saved = savePlayerProfile(storage, userId, profile);
     setState({ profile: saved, error: '' });
+    setCatalogSelection(saved.selectionV1 || emptySelection());
     return saved;
   }, [userId]);
 
-  const value = useMemo(() => ({ profile: state.profile, loadError: state.error, save }), [state, save]);
+  const value = useMemo(() => ({ profile: state.profile, loadError: state.error, save, catalogSelection, setCatalogSelection }), [state, save, catalogSelection]);
   return <PlayerProfileContext.Provider value={value}>{children}</PlayerProfileContext.Provider>;
 }
